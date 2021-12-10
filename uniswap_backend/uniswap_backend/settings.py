@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -129,3 +129,9 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
+
+ADDRESS = os.environ['ADDRESS']
+PRIVATE_KEY = os.environ['PRIVATE_KEY']
+PROVIDER = os.environ['PROVIDER']
+
+GAS_ENDPOINT = 'https://ethgas.watch/api/gas'

@@ -10,7 +10,7 @@ class OrderSerializer(serializers.ModelSerializer, SerializerValidatorMixin):
         fields = ('token_to', 'to_count', 'token_from', 'from_count', 'percentage', 'start_time', 'end_time')
 
     def validate(self, attrs):
-        attrs['percentage'] += 1
+        attrs['percentage'] = 1 + attrs.get('percentage')
         attrs['token_to'] = self.validate_token_address(attrs['token_to'], 'token_to')
         attrs['token_from'] = self.validate_token_address(attrs['token_from'], 'token_from')
         attrs['start_time'], attrs['end_time'] = self.validate_time_range(attrs['start_time'], attrs['end_time'])
