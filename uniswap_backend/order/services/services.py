@@ -92,19 +92,30 @@ class UniSwapWrapper:
                 'Your class must have gas_price_selection method'
             )
 
-    def get_token_to_price(self, token_from, token_to, quantity: int = 1):
-        token_to = self.check_address(token_to)
+    def get_token_to_price(self, token_from, token_to, quantity):
         token_from = self.check_address(token_from)
+        token_to = self.check_address(token_to)
 
-        token_out_amount = quantity * 10 ** token_from.decimals
+        amount_token_out = quantity * 10 ** token_from.decimals
 
         output = self.uniswap.get_price_output(
             token_to.address,
             token_from.address,
-            token_out_amount,
+            amount_token_out
         )
         price = output / 10 ** token_to.decimals
         return price
+
+    def custom_make_trade(self, token_from, token_to, quantity: int = 1):
+        token_input = self.check_address(token_from)
+        token_output = self.check_address(token_to)
+
+        x = self.uniswap.make_trade(
+            token_input.address, token_output.address, quantity * 10 ** token_input.decimals, fee=500
+        )
+
+        print(x)
+
 
     def check_address(self, token):
         token_address = Web3.toChecksumAddress(token)
