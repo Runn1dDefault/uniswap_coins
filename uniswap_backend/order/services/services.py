@@ -1,4 +1,3 @@
-# Библиотека не поддерживается и много ошибок. Работать с нею невозможно!
 import time
 from typing import Union
 
@@ -6,7 +5,7 @@ import requests
 from web3 import Web3
 from uniswap import Uniswap
 
-from .decorators import multiprocess
+from .decorators import multiprocess, auto_change_version
 from .instances import GAS_ENDPOINT
 
 
@@ -52,7 +51,7 @@ class GasWrapper:
         }
 
         while True:
-            time.sleep(2)
+            time.sleep(1)
             request = requests.get(
                 GAS_ENDPOINT,
                 headers=_HEADERS
@@ -92,29 +91,16 @@ class UniSwapWrapper:
             )
 
     def get_token_to_price(self, token_from, token_to, quantity: Union[int, float] = 1):
-        token_to, decimals_token_to = self._check_to_eth(token_to)
-        token_from, decimals_token_from = self._check_to_eth(token_from)
+        token_to = self.get_token(token_to)
+        token_from = self.get_token(token_from)
 
         output = self.uniswap.get_price_output(
-            token_to,
-            token_from,
-            quantity * 10 ** decimals_token_to
+            token_to.address,
+            token_from.address,
+            quantity * 10 ** token_from.decimals,
+            fee=0
         )
-        print(output / 10 ** decimals_token_from)
-        return output / 10 ** decimals_token_from
-
-    def _check_to_eth(self, token_address):
-        _ETH = '0x0000000000000000000000000000000000000000'
-
-        if token_address != _ETH:
-            token = self.get_token(token_address)
-
-            token_address = token.address
-            decimals_token = token.decimals
-        else:
-            decimals_token = 18
-
-        return token_address, decimals_token
+        return output / 10 ** token_to.decimals
 
     def get_token(self, token):
         token_address = Web3.toChecksumAddress(token)
