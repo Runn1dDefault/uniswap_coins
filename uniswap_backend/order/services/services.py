@@ -6,7 +6,7 @@ from web3 import Web3
 from uniswap import Uniswap
 
 from .decorators import multiprocess, auto_change_version
-from .instances import GAS_ENDPOINT
+from .instances import GAS_ENDPOINT, PROVIDER
 
 
 class GasWrapper:
@@ -80,28 +80,32 @@ class UniSwapWrapper:
         if self.gas_instance is None:
             raise IndentationError('You must add gas_instance on initialization')
 
-        # TODO: Here add logic for change gas for uniswap instance
-
         try:
-            return self.gas_instance.gas_price_selection()
+            gas_price = self.gas_instance.gas_price_selection
+            w3 = Web3(Web3.HTTPProvider(PROVIDER, request_kwargs={"timeout": 10}))
+            w3.eth.set_gas_price_strategy(gas_price)
+            self.uniswap.w3 = w3
+            return gas_price()
 
         except Exception:
             raise ModuleNotFoundError(
                 'Your class must have gas_price_selection method'
             )
 
-    def get_token_to_price(self, token_from, token_to, quantity: Union[int, float] = 1):
-        token_to = self.get_token(token_to)
-        token_from = self.get_token(token_from)
+    def get_token_to_price(self, token_from, token_to, quantity: int = 1):
+        token_to = self.check_address(token_to)
+        token_from = self.check_address(token_from)
+
+        token_out_amount = quantity * 10 ** token_from.decimals
 
         output = self.uniswap.get_price_output(
             token_to.address,
             token_from.address,
-            quantity * 10 ** token_from.decimals,
-            fee=0
+            token_out_amount,
         )
-        return output / 10 ** token_to.decimals
+        price = output / 10 ** token_to.decimals
+        return price
 
-    def get_token(self, token):
+    def check_address(self, token):
         token_address = Web3.toChecksumAddress(token)
         return self.uniswap.get_token(token_address)

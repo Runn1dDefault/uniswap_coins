@@ -65,10 +65,11 @@ class TestUniSwapWrapper(unittest.TestCase):
         # ETH -> USTD
         price = self.uniswap.get_token_to_price(
             token_from='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-            token_to='0xdAC17F958D2ee523a2206206994597C13D831ec7',
+            token_to='0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
             quantity=3
         )
         print(price)
+
         self.assertIsInstance(price, float)
 
     # def test_gas_price(self):

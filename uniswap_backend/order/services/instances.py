@@ -8,6 +8,5 @@ uniswap_instance = Uniswap(
     ADDRESS,
     PRIVATE_KEY,
     PROVIDER,
-    version=2,
-    default_slippage=0.0
+    version=2
 )
