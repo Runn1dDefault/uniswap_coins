@@ -143,5 +143,4 @@ CELERY_RESULT_BACKEND = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
 ADDRESS = os.environ['ADDRESS']
 PRIVATE_KEY = os.environ['PRIVATE_KEY']
 PROVIDER = os.environ['PROVIDER']
-GAS_ENDPOINT = 'https://ethgas.watch/api/gas'
 

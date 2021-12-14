@@ -1,44 +1,25 @@
+from django.utils.timezone import now
+
 from uniswap_backend.celery import app
 
 from .models import Order
-from .services.services import UniSwapWrapper, GasWrapper
-from .services.instances import uniswap_instance
+from .services.services import SwapWrapper
 
 
 @app.task
 def celery_test(content):
-    uniswap = UniSwapWrapper(
-            uniswap=uniswap_instance,
-            gas_instance=GasWrapper(
-                max_gas_price=20,
-                currency='usd'
-            )
+    end_time = content.pop('end_time')
+    # this class for swap logic construct
+    swap_wrapper = SwapWrapper(
+        **content
     )
 
-    while True:
-        price = uniswap.get_token_to_price(
-            token_input=content.get('token_from'),
-            token_output=content.get('token_to'),
-            quantity=content.get('from_count')
-        )
+    while now() <= end_time:
+        if swap_wrapper.price_in_range:
+            # do make trade
+            swap_wrapper.make_trade()
+            # Order status update
+            Order.find_and_status_update(id=content.get('id'))
 
-        count_per = content.get('to_count') * content.get('percentage') / 100
-
-        plus_need_sum = content.get('to_count') + count_per
-        minus_need_sum = content.get('to_count') - count_per
-
-        print(minus_need_sum,'----',  price, '++++', plus_need_sum)
-
-        if minus_need_sum <= price <= plus_need_sum:
-            # make trade
-            uniswap.custom_make_trade(
-                token_from=content.get('token_from'),
-                token_to=content.get('token_to'),
-                quantity=2
-            )
-            # Order save
-            order = Order.objects.get(id=content.get('id'))
-            order.status = True
-            order.save()
-            print('+++++++++')
+            # TODO: need revoke this task after successfully ended
             break

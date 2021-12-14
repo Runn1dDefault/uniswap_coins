@@ -25,3 +25,11 @@ class Order(models.Model):
 
     # True if work done
     status = models.BooleanField(default=False)
+
+    @classmethod
+    def find_and_status_update(cls, **kwargs):
+        objs_filter = cls.objects.filter(**kwargs)
+        if objs_filter.exists():
+            order = objs_filter.first()
+            order.status = True
+            order.save()

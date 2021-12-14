@@ -1,7 +1,8 @@
-uniswap-python
 requests~=2.26.0
-web3~=5.25.0
 python-dotenv~=0.19.2
+djangorestframework==3.13.0
 Django~=4.0
-djangorestframework~=3.12.4
-celery
+celery==5.2.1
+web3~=5.25.0
+uniswap-python==0.5.3
+drf-yasg==1.20.0
