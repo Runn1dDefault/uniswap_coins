@@ -14,9 +14,9 @@ class GasWrapper:
     prices_names = ('slow', 'normal', 'fast', 'instant')
     price_currency = ('gwei', 'usd')
 
-    def __init__(self, token_output_price: float, currency: str):
+    def __init__(self, max_gas_price: float, currency: str):
         self.prices_count = len(self.prices_names)
-        self.token_output_price = token_output_price
+        self.max_gas_price = max_gas_price
         self.currency = currency.strip().lower()
         self._check_currency()
 
@@ -32,7 +32,7 @@ class GasWrapper:
 
             price = gas_json.get(name).get(self.currency)
 
-            if price > self.token_output_price:
+            if price < self.max_gas_price:
                 return price
 
         return gas_json.get('normal').get(self.currency)
@@ -41,6 +41,19 @@ class GasWrapper:
     def gas_max_price(self):
         gas_json = self.gas_info()
         return gas_json.get(self.prices_names[-1]).get(self.currency)
+
+    def get_w3_instance_with_gas(self):
+        gas_price = self.gas_instance.gas_price_selection
+
+        w3 = Web3(Web3.HTTPProvider(PROVIDER, request_kwargs={"timeout": 10}))
+        if not w3.isConnected():
+            raise ConnectionError('Invalid http provider')
+
+        w3.eth.set_gas_price_strategy(gas_price)
+        w3.middleware_onion.add(middleware.time_based_cache_middleware)
+        w3.middleware_onion.add(middleware.latest_block_based_cache_middleware)
+        w3.middleware_onion.add(middleware.simple_cache_middleware)
+        return w3, gas_price
 
     @staticmethod
     def gas_info():
@@ -81,10 +94,9 @@ class UniSwapWrapper:
             raise IndentationError('You must add gas_instance on initialization')
 
         try:
-            gas_price = self.gas_instance.gas_price_selection
-            w3 = Web3(Web3.HTTPProvider(PROVIDER, request_kwargs={"timeout": 10}))
-            w3.eth.set_gas_price_strategy(gas_price)
+            w3, gas_price = self.gas_instance.get_w3_instance_with_gas()
             self.uniswap.w3 = w3
+
             return gas_price()
 
         except Exception:
@@ -92,18 +104,16 @@ class UniSwapWrapper:
                 'Your class must have gas_price_selection method'
             )
 
-    def get_token_to_price(self, token_from, token_to, quantity):
-        token_from = self.check_address(token_from)
-        token_to = self.check_address(token_to)
+    def get_token_to_price(self, token_input, token_output, quantity: int = 1):
+        tki = self.check_address(token_input)
+        tko = self.check_address(token_output)
 
-        amount_token_out = quantity * 10 ** token_from.decimals
-
-        output = self.uniswap.get_price_output(
-            token_to.address,
-            token_from.address,
-            amount_token_out
+        output = self.uniswap.get_price_input(
+            token0=tki.address,
+            token1=tko.address,
+            qty=quantity * 10 ** tki.decimals,
         )
-        price = output / 10 ** token_to.decimals
+        price = output / 10 ** tko.decimals
         return price
 
     def custom_make_trade(self, token_from, token_to, quantity: int = 1):
@@ -111,7 +121,10 @@ class UniSwapWrapper:
         token_output = self.check_address(token_to)
 
         x = self.uniswap.make_trade(
-            token_input.address, token_output.address, quantity * 10 ** token_input.decimals, fee=500
+            token_input.address,
+            token_output.address,
+            quantity * 10 ** token_input.decimals,
+            fee=500
         )
 
         print(x)
@@ -120,3 +133,5 @@ class UniSwapWrapper:
     def check_address(self, token):
         token_address = Web3.toChecksumAddress(token)
         return self.uniswap.get_token(token_address)
+
+

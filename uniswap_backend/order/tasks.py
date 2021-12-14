@@ -10,15 +10,15 @@ def celery_test(content):
     uniswap = UniSwapWrapper(
             uniswap=uniswap_instance,
             gas_instance=GasWrapper(
-                token_output_price=20,
+                max_gas_price=20,
                 currency='usd'
             )
     )
 
     while True:
         price = uniswap.get_token_to_price(
-            token_from=content.get('token_from'),
-            token_to=content.get('token_to'),
+            token_input=content.get('token_from'),
+            token_output=content.get('token_to'),
             quantity=content.get('from_count')
         )
 
@@ -27,7 +27,7 @@ def celery_test(content):
         plus_need_sum = content.get('to_count') + count_per
         minus_need_sum = content.get('to_count') - count_per
 
-        print(minus_need_sum,'++++',  price, '++++', plus_need_sum)
+        print(minus_need_sum,'----',  price, '++++', plus_need_sum)
 
         if minus_need_sum <= price <= plus_need_sum:
             # make trade
