@@ -1,3 +1,6 @@
+from django.conf import settings
+from typing import Union
+
 from uniswap.token import ERC20Token
 from web3 import Web3, middleware
 from uniswap import Uniswap
@@ -14,28 +17,37 @@ class UniSwapWrapper:
     def change_slippage(self, max_slippage: float):
         self.uniswap.default_slippage = max_slippage
 
-    def get_token_to_price(self, token_input, token_output, quantity: int = 1):
-        token_i = self.check_address(token_input)
-        token_o = self.check_address(token_output)
+    def get_token_to_price(self, token_input, token_output, quantity: Union[float, int] = 0.01):
+        token_input_address = self.check_address(
+            token_input).address if token_input != settings.BASE_TOKEN_ADDRESS else token_input
+        token_output_address = self.check_address(
+            token_output).address if token_output != settings.BASE_TOKEN_ADDRESS else token_output
 
         output = self.uniswap.get_price_input(
-            token0=token_i.address,
-            token1=token_o.address,
-            qty=quantity * 10 ** token_i.decimals,
+            token0=token_input_address,
+            token1=token_output_address,
+            qty=int(quantity * 10 ** self.get_token_decimal(token_output)),
         )
-        price = output / 10 ** token_o.decimals
+        price = output / 10 ** self.get_token_decimal(token_input)
         return price
 
-    def make_trade(self, token_from, token_to, quantity: int = 1):
-        token_input = self.check_address(token_from)
-        token_output = self.check_address(token_to)
+    def make_trade(self, token_from, token_to, quantity: Union[float, int] = 0.01):
+        token_input_address = self.check_address(
+            token_from).address if token_from != settings.BASE_TOKEN_ADDRESS else token_from
+        token_output_address = self.check_address(
+            token_to).address if token_to != settings.BASE_TOKEN_ADDRESS else token_to
 
         x = self.uniswap.make_trade(
-            token_input.address,
-            token_output.address,
-            quantity * 10 ** token_input.decimals
+            token_input_address,
+            token_output_address,
+            int(quantity * 10 ** self.get_token_decimal(token_from))
         )
-        return x
+        return x.hex()
+
+    def get_token_decimal(self, token_address):
+        if token_address == settings.BASE_TOKEN_ADDRESS:
+            return 18
+        return self.check_address(token_address).decimals
 
     def check_address(self, token) -> ERC20Token:
         token_address = Web3.toChecksumAddress(token)
@@ -89,7 +101,16 @@ class SwapWrapper:
             return True
         return False
 
-    def make_trade(self):
+    @property
+    def eth_balance(self):
+        """
+            For get token balance:
+                self.uni_wrapper.uniswap.get_token_balance(valid_token_address)
+        """
+        return self.uni_wrapper.uniswap.get_eth_balance()
+
+    def make_trade_custom(self):
+
         return self.uni_wrapper.make_trade(
             token_from=self.token_input,
             token_to=self.token_output,

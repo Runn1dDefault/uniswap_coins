@@ -15,6 +15,7 @@ class OrderSerializer(serializers.ModelSerializer, SerializerValidatorMixin):
         attrs['token_from'] = self.validate_token_address(attrs['token_from'], 'token_from')
         attrs['start_time'], attrs['end_time'] = self.validate_time_range(attrs['start_time'], attrs['end_time'])
         attrs['to_count'], attrs['from_count'] = self.validate_token_count(attrs['to_count'], attrs['from_count'])
+        self.validate_balance(attrs['token_from'], float(attrs['from_count']))
         return attrs
 
     def to_representation(self, instance):

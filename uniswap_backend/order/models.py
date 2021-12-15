@@ -25,11 +25,14 @@ class Order(models.Model):
 
     # True if work done
     status = models.BooleanField(default=False)
+    contract_address = models.TextField()
 
     @classmethod
-    def find_and_status_update(cls, **kwargs):
+    def find_and_status_update(cls, contract_address: str, **kwargs):
         objs_filter = cls.objects.filter(**kwargs)
         if objs_filter.exists():
             order = objs_filter.first()
             order.status = True
+            order.contract_address = contract_address
             order.save()
+

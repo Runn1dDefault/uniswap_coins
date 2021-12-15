@@ -31,11 +31,11 @@ class OrderTests(APITestCase, URLPatternsTestCase):
     ]
 
     def setUp(self) -> None:
-        today = localtime(now()) + datetime.timedelta(minutes=5)
+        today = localtime(now()) + datetime.timedelta(seconds=10)
         self.order = Order.objects.create(
-            token_from='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-            token_to='0xdAC17F958D2ee523a2206206994597C13D831ec7',
-            from_count=1,
+            token_from='0x0000000000000000000000000000000000000000',
+            token_to='0xc8f88977e21630cf93c02d02d9e8812ff0dfc37a',
+            from_count=0.001,
             to_count=4000.45,
             percentage=1,
             start_time=today,
@@ -45,13 +45,13 @@ class OrderTests(APITestCase, URLPatternsTestCase):
     def test_order_create(self):
         url = reverse('order_list')
         # ETH=1 -> USDT=3804.45
-        today = localtime(now()) + datetime.timedelta(minutes=5)
+        today = localtime(now()) + datetime.timedelta(seconds=10)
 
         data = dict(
-            token_from='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-            token_to='0xdAC17F958D2ee523a2206206994597C13D831ec7',
-            from_count=1,
-            to_count=4000.45,
+            token_from='0xc8f88977e21630cf93c02d02d9e8812ff0dfc37a',
+            token_to='0x0000000000000000000000000000000000000000',
+            from_count=0.1007,
+            to_count=1.15113,
             percentage=1,
             start_time=today,
             end_time=today + datetime.timedelta(days=1)

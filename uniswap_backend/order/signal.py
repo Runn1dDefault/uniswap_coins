@@ -1,12 +1,8 @@
-from celery.schedules import crontab
-
 from django.utils.timezone import now, localtime
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from uniswap_backend.celery import app
-
-from .tasks import celery_test
+from .tasks import swap_task
 from .models import Order
 
 
@@ -24,20 +20,9 @@ def pre_listing_request(sender, instance, created, **kwargs):
             'percentage': float(instance.percentage)
         }
 
-        st_time = instance.start_time
+        st_time = localtime(instance.start_time)
 
         if st_time <= localtime(now()):
-            celery_test.delay(content=content)
+            swap_task.delay(content=content)
         else:
-            start_time = instance.start_time
-
-            app.add_periodic_task(
-                crontab(
-                    hour=start_time.hour,
-                    minute=start_time.minute,
-                    day_of_month=start_time.day,
-                    month_of_year=start_time.month
-                ),
-                celery_test.s(content=content),
-                name=f'OrderID: {kwargs.get("id")}'
-            )
+            swap_task.apply_async(kwargs={'content': content}, eta=st_time)
