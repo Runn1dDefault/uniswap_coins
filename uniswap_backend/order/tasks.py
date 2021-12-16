@@ -1,38 +1,23 @@
-from datetime import datetime
-
-from django.conf import settings
-from django.utils.timezone import now, localtime, utc
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from uniswap_backend.celery import app
 
-from .models import Order
-from .services.services import SwapWrapper
+from order.models import Order
+from order.services.services import UniSwapWrapper
+
+import time
 
 
 @app.task
 def swap_task(content):
-    end_time = localtime(
-        datetime.strptime(
-            content.pop('end_time'), '%Y-%m-%dT%H:%M:%S.%fZ'
-        ).astimezone(tz=utc if settings.USE_TZ else None)
-    )
-    order_id = content.pop('id')
-    # this class for swap logic construct
-    print(content)
-
-    swap_wrapper = SwapWrapper(
-        **content
-    )
-
-    while localtime(now()) <= end_time:
+    swap_wrapper = UniSwapWrapper(**content)
+    while timezone.now() <= parse_datetime(content.get('end_time')):
+        time.sleep(5)
         if swap_wrapper.price_in_range:
             # do make trade
-            contract_address = swap_wrapper.make_trade_custom()
-
-            print(contract_address)
-            # Order status update
-            Order.find_and_status_update(contract_address, id=order_id)
-
+            contract_address = swap_wrapper.make_trade()
+            Order.find_and_status_update(contract_address, id=content.get('id'))
             break
         else:
             print('-------------------------')
