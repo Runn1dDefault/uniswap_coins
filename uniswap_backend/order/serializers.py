@@ -21,5 +21,5 @@ class OrderSerializer(serializers.ModelSerializer, SerializerValidatorMixin):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['id'] = instance.id
-        representation['status'] = instance.status
+        representation['contract_address'] = instance.contract_address
         return representation

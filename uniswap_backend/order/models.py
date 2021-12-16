@@ -16,15 +16,14 @@ class Order(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     # True if work done
-    status = models.BooleanField(default=False)
-    contract_address = models.TextField()
+    contract_address = models.TextField(blank=True)
+    task_id = models.CharField(max_length=255, blank=True)
 
     @classmethod
     def find_and_status_update(cls, contract_address: str, **kwargs):
         objs_filter = cls.objects.filter(**kwargs)
         if objs_filter.exists():
             order = objs_filter.first()
-            order.status = True
             order.contract_address = contract_address
             order.save()
 
