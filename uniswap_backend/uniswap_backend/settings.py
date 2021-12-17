@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xa2hq9elg%7sun4ke*%kby==2&shls-@&01gyesm+kcdnt7hzr'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'foo')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG_VALUE', False)
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '104.200.17.83']
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
 # Application definition
@@ -80,8 +80,12 @@ WSGI_APPLICATION = 'uniswap_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        'NAME': os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
+        'USER': os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
 
@@ -134,7 +138,6 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
-
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
@@ -147,5 +150,5 @@ CELERY_RESULT_BACKEND = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
 ADDRESS = os.environ['ADDRESS']
 PRIVATE_KEY = os.environ['PRIVATE_KEY']
 PROVIDER = os.environ['PROVIDER']
-BASE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
 TEST_PROVIDER = os.environ['TEST_PROVIDER']
+BASE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
