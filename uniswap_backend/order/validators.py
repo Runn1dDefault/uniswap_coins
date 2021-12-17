@@ -30,9 +30,10 @@ class ValidatorMixin:
 
     @staticmethod
     def validate_time_range(start_time: datetime, end_time: datetime):
-        if localtime(now()) - datetime.timedelta(seconds=10) < start_time < end_time:
-            return start_time, end_time
-        raise forms.ValidationError({'start_time': 'Invalid time range', 'end_time': 'Invalid time range'})
+        if localtime(now()) - datetime.timedelta(seconds=20) > start_time:
+            raise forms.ValidationError({'start_time': 'Invalid time range'})
+        if start_time > end_time:
+            raise forms.ValidationError({'end_time': 'Invalid time range'})
 
     def check_token_group_balance(self, token_from: str = None, from_count: Union[int, float] = None):
         """
@@ -47,7 +48,7 @@ class ValidatorMixin:
                 end_time__gt=localtime(now()),
                 token_from=token_address
             )
-            tokens_quantity = sum(i.from_count for i in orders or []) + from_count
+            tokens_quantity = float(sum(i.from_count for i in orders or [])) + from_count
 
             token_balance = uniswap_instance.get_token_balance(token_address) / 10 ** token_decimals
             # check balance
