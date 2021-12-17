@@ -1,18 +1,24 @@
-from order.services.instances import uniswap_instance
-from order.convert import token_check_address
+from order.services.instances import get_uniswap_instance
+from order.services.convert import token_check_address
 
 
 class UniSwapWrapper:
-
     def __init__(self, token_to, token_from, percentage, to_count, from_count, **kwargs):
-        self.uniswap = uniswap_instance
+        self.kwargs = kwargs
+        self.uniswap = get_uniswap_instance(self.is_test_provider)
         self.token_to = token_to
         self.token_from = token_from
         self.percentage = percentage
         self.price = to_count
         self.from_count = from_count
-        self.token_from_address, self.from_decimal = token_check_address(token_from)
-        self.token_to_address, self.to_decimal = token_check_address(token_to)
+        self.token_from_address, self.from_decimal = token_check_address(token_from, self.is_test_provider)
+        self.token_to_address, self.to_decimal = token_check_address(token_to, self.is_test_provider)
+
+    @property
+    def is_test_provider(self) -> bool:
+        if self.kwargs.get('is_test'):
+            return True
+        return False
 
     def change_slippage(self, max_slippage: float):
         self.uniswap.default_slippage = max_slippage
@@ -35,13 +41,13 @@ class UniSwapWrapper:
         return self.price * self.percentage / 100
 
     @property
-    def max_and_min_price(self):
+    def max_and_min_price(self) -> tuple:
         max_price = self.price + self.max_slippage
         min_price = self.price - self.max_slippage
         return max_price, min_price
 
     @property
-    def price_in_range(self):
+    def price_in_range(self) -> bool:
         price = self.get_token_to_price
         max_price, min_price = self.max_and_min_price
         if min_price <= price <= max_price:
@@ -49,5 +55,5 @@ class UniSwapWrapper:
         return False
 
     @property
-    def get_quantity(self):
+    def get_quantity(self) -> int:
         return int(self.from_count * 10 ** self.from_decimal)

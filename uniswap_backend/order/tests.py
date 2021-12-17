@@ -2,12 +2,12 @@ import datetime
 
 from django.urls import reverse, path
 from django.utils.timezone import localtime, now
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase, URLPatternsTestCase
-from django.conf import settings
 
-from .models import Order
-from .views import OrderModelViewSet
+from order.models import Order
+from order.views import OrderModelViewSet
 
 
 class OrderTests(APITestCase, URLPatternsTestCase):
@@ -76,4 +76,4 @@ class OrderTests(APITestCase, URLPatternsTestCase):
     def test_order_delete(self):
         url = reverse('order_detail', kwargs={'pk': self.order.id})
         response = self.client.delete(url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

@@ -6,6 +6,8 @@ from uniswap_backend.celery import app
 from .tasks import swap_task
 from .models import Order
 
+# TODO: Throttling the number of running processes
+
 
 @receiver(post_save, sender=Order)
 def pre_listing_request(sender, instance, created, **kwargs):
@@ -27,5 +29,5 @@ def pre_listing_request(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Order)
 def pre_listing_request(sender, instance, **kwargs):
-    print(instance.task_id, '---------------------------')
+    print('Deleted task ID: {}'.format(instance.task_id))
     app.control.revoke(str(instance.task_id), terminate=True)
