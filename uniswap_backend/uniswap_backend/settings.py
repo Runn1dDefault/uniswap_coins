@@ -11,10 +11,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
-
 load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -133,8 +132,18 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
+
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "jjsja7123jdasdkk21238882jjejq")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+
 ADDRESS = os.environ['ADDRESS']
 PRIVATE_KEY = os.environ['PRIVATE_KEY']
 PROVIDER = os.environ['PROVIDER']
-
-GAS_ENDPOINT = 'https://ethgas.watch/api/gas'
+BASE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
+TEST_PROVIDER = os.environ['TEST_PROVIDER']

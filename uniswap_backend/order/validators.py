@@ -2,46 +2,56 @@ import datetime
 from typing import Union
 
 from django.utils.timezone import localtime, now
-from rest_framework import serializers
-from web3 import Web3
+from django import forms
+
+from order.services.convert import token_check_address
+from order.services.instances import get_uniswap_instance
 
 
-def validate_percentage(value: Union[int, float]):
-    if value < 0 or value > 100:
-        raise ValueError('Invalid percentage: {}'.format(value))
-
-
-class SerializerValidatorMixin:
+class ValidatorMixin:
     @staticmethod
-    def validate_token_address(token_address: str, field_name: str):
+    def validate_percentage(value: Union[int, float]):
+        if value < 0 or value > 100:
+            raise forms.ValidationError({'percentage': 'Invalid percentage: {}'.format(value)})
+
+    @staticmethod
+    def validate_token_address(token_address, filed_name: str):
         try:
-            Web3.toChecksumAddress(token_address)
-            return token_address
+            token_check_address(token_address)
         except Exception:
-            raise serializers.ValidationError({field_name: 'Invalid token address!'})
+            raise forms.ValidationError({filed_name: 'Invalid token address!'})
 
     @staticmethod
     def validate_token_count(to_count: Union[float, int], from_count: Union[int, float]):
         if to_count == 0:
-            raise serializers.ValidationError(
-                {
-                    'to_count': 'must be greater than zero'
-                }
-            )
+            raise forms.ValidationError({'to_count': 'Must be greater than zero'})
         if from_count == 0:
-            raise serializers.ValidationError(
-                {
-                    'from_count': 'must be greater than zero'
-                }
-            )
-        return to_count, from_count
+            raise forms.ValidationError({'from_count': 'Must be greater than zero'})
 
     @staticmethod
     def validate_time_range(start_time: datetime, end_time: datetime):
-
-        if end_time > localtime(now()) < start_time < end_time:
+        if localtime(now()) - datetime.timedelta(seconds=10) < start_time < end_time:
             return start_time, end_time
+        raise forms.ValidationError({'start_time': 'Invalid time range', 'end_time': 'Invalid time range'})
 
-        raise serializers.ValidationError(
-            {'start_time': 'Invalid time range', 'end_time': 'Invalid time range'}
-        )
+    def check_token_group_balance(self, token_from: str = None, from_count: Union[int, float] = None):
+        """
+            Balance check with pairs that are not over yet
+        """
+        # is not a test network
+        if token_from and from_count:
+            uniswap_instance = get_uniswap_instance()
+            token_address, token_decimals = token_check_address(token_from)
+            orders = self.__class__.objects.filter(
+                contract_address='',
+                end_time__gt=localtime(now()),
+                token_from=token_address
+            )
+            tokens_quantity = sum(i.from_count for i in orders or []) + from_count
+
+            token_balance = uniswap_instance.get_token_balance(token_address) / 10 ** token_decimals
+            # check balance
+            if token_balance == 0 or tokens_quantity > token_balance:
+                raise forms.ValidationError(
+                    f"Insufficient balance for token address: {token_from}.\nToken balance: {token_balance}"
+                )

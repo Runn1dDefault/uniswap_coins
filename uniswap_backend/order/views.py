@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
-from .models import Order
-from .serializers import OrderSerializer
+from order.models import Order
+from order.serializers import OrderSerializer
 
 
 class OrderModelViewSet(ModelViewSet):
