@@ -1,10 +1,44 @@
 version: "3"
 
 services:
-  db:
-    image: postgres:12.0-alpine
+  web:
+    restart: unless-stopped
+    build:
+      context: ./uniswap_backend
+      dockerfile: ./Dockerfile
+    entrypoint: /app/uniswap_backend/maker-entrypoint.sh
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./uniswap_backend:/app/uniswap_backend
+      - static_volume:/app/uniswap_backend/django_static
+    expose:
+      - 8000
+    env_file:
+      - ./uniswap_backend/.env
+
+  celery:
+    restart: always
+    build:
+      context: ./uniswap_backend
+#    entrypoint: "/bin/sh -c cd uniswap_backend && celery -A  uniswap_backend worker"
+    command: /bin/bash -c "cd uniswap_backend && celery -A  uniswap_backend worker"
+    volumes:
+      - ./uniswap_backend:/app/uniswap_backend
+    env_file:
+      - ./uniswap_backend/.env
+    depends_on:
+      - redis
+      - web
+
+  nginx:
+    image: library/nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - static_volume:/app/uniswap_backend/django_static
+      - ./uniswap_backend/nginx/dev:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      - web
 
   redis:
     image: 'redis:alpine'
@@ -19,6 +53,5 @@ services:
       - redis_data:/bitnami/redis/data
 
 volumes:
-  postgres_data:
   static_volume: {}
   redis_data:
