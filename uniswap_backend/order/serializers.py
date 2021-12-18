@@ -6,7 +6,7 @@ from order.models import Order
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('token_to', 'to_count', 'token_from', 'from_count', 'percentage', 'start_time', 'end_time')
+        fields = ('token_from', 'count_from', 'token_to', 'count_to', 'percentage', 'start_time', 'end_time')
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

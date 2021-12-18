@@ -16,8 +16,8 @@ def pre_listing_request(sender, instance, created, **kwargs):
             'id': int(instance.id),
             'token_to': instance.token_to,
             'token_from': instance.token_from,
-            'from_count': float(instance.from_count),
-            'to_count': float(instance.to_count),
+            'count_from': float(instance.count_from),
+            'count_to': float(instance.count_to),
             'end_time': instance.end_time,
             'percentage': float(instance.percentage)
         }

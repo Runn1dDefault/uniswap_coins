@@ -48,8 +48,8 @@ class TestUniswapWrapper(unittest.TestCase):
         self.uniswap = UniSwapWrapper(
             token_from=settings.BASE_TOKEN_ADDRESS,
             token_to='0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-            from_count=0.1007,
-            to_count=1.15113,
+            count_from=0.1007,
+            count_to=1.15113,
             percentage=1,
             # change provider on test network
             is_test=True

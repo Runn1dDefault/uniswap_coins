@@ -22,25 +22,23 @@ class ValidatorMixin:
             raise forms.ValidationError({filed_name: 'Invalid token address!'})
 
     @staticmethod
-    def validate_token_count(to_count: Union[float, int], from_count: Union[int, float]):
-        if to_count == 0:
-            raise forms.ValidationError({'to_count': 'Must be greater than zero'})
-        if from_count == 0:
-            raise forms.ValidationError({'from_count': 'Must be greater than zero'})
+    def validate_token_count(count_to: Union[float, int], count_from: Union[int, float]):
+        if count_to == 0:
+            raise forms.ValidationError({'count_to': 'Must be greater than zero'})
+        if count_from == 0:
+            raise forms.ValidationError({'count_from': 'Must be greater than zero'})
 
     @staticmethod
     def validate_time_range(start_time: datetime, end_time: datetime):
-        if localtime(now()) - datetime.timedelta(seconds=20) > start_time:
-            raise forms.ValidationError({'start_time': 'Invalid time range'})
         if start_time > end_time:
-            raise forms.ValidationError({'end_time': 'Invalid time range'})
+            raise forms.ValidationError('Invalid time range')
 
-    def check_token_group_balance(self, token_from: str = None, from_count: Union[int, float] = None):
+    def check_token_group_balance(self, token_from: str = None, count_from: Union[int, float] = None):
         """
             Balance check with pairs that are not over yet
         """
         # is not a test network
-        if token_from and from_count:
+        if token_from and count_from:
             uniswap_instance = get_uniswap_instance()
             token_address, token_decimals = token_check_address(token_from)
             orders = self.__class__.objects.filter(
@@ -48,7 +46,7 @@ class ValidatorMixin:
                 end_time__gt=localtime(now()),
                 token_from=token_address
             )
-            tokens_quantity = float(sum(i.from_count for i in orders or [])) + from_count
+            tokens_quantity = float(sum(i.count_from for i in orders or [])) + count_from
 
             token_balance = uniswap_instance.get_token_balance(token_address) / 10 ** token_decimals
             # check balance

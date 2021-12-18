@@ -3,14 +3,14 @@ from order.services.convert import token_check_address
 
 
 class UniSwapWrapper:
-    def __init__(self, token_to, token_from, percentage, to_count, from_count, **kwargs):
+    def __init__(self, token_to, token_from, percentage, count_to, count_from, **kwargs):
         self.kwargs = kwargs
         self.uniswap = get_uniswap_instance(self.is_test_provider)
         self.token_to = token_to
         self.token_from = token_from
         self.percentage = percentage
-        self.price = to_count
-        self.from_count = from_count
+        self.price = count_to
+        self.count_from = count_from
         self.token_from_address, self.from_decimal = token_check_address(token_from, self.is_test_provider)
         self.token_to_address, self.to_decimal = token_check_address(token_to, self.is_test_provider)
 
@@ -56,4 +56,4 @@ class UniSwapWrapper:
 
     @property
     def get_quantity(self) -> int:
-        return int(self.from_count * 10 ** self.from_decimal)
+        return int(self.count_from * 10 ** self.from_decimal)

@@ -4,12 +4,12 @@ from order.validators import ValidatorMixin
 
 
 class Order(models.Model, ValidatorMixin):
-    # tokens addresses
-    token_to = models.CharField(max_length=255)
+    # token from
     token_from = models.CharField(max_length=255)
-    # value for tokens
-    from_count = models.DecimalField(max_digits=19, decimal_places=10)
-    to_count = models.DecimalField(max_digits=19, decimal_places=10)
+    count_from = models.DecimalField(max_digits=19, decimal_places=10)
+    # token to
+    token_to = models.CharField(max_length=255)
+    count_to = models.DecimalField(max_digits=19, decimal_places=10)
     # admissible error
     percentage = models.DecimalField(default=1, max_digits=19, decimal_places=10)
     # work timerange
@@ -29,8 +29,8 @@ class Order(models.Model, ValidatorMixin):
         self.validate_token_address(self.token_to, 'token_to')
         self.validate_token_address(self.token_from, 'token_from')
         self.validate_time_range(self.start_time, self.end_time)
-        self.validate_token_count(float(self.to_count), float(self.from_count))
-        self.check_token_group_balance(self.token_from, float(self.from_count))
+        self.validate_token_count(float(self.count_to), float(self.count_from))
+        self.check_token_group_balance(self.token_from, float(self.count_from))
 
     @classmethod
     def find_and_status_update(cls, contract_address: str, **kwargs):

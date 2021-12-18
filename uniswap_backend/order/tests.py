@@ -35,9 +35,9 @@ class OrderTests(APITestCase, URLPatternsTestCase):
         today = localtime(now()) - datetime.timedelta(seconds=30)
         self.order = Order.objects.create(
             token_from='0x0000000000000000000000000000000000000000',
+            count_from=0.001,
             token_to='0xc8f88977e21630cf93c02d02d9e8812ff0dfc37a',
-            from_count=0.001,
-            to_count=4000.45,
+            count_to=4000.45,
             percentage=1,
             start_time=today,
             end_time=today + datetime.timedelta(days=1)
@@ -50,9 +50,9 @@ class OrderTests(APITestCase, URLPatternsTestCase):
 
         data = dict(
             token_from=settings.BASE_TOKEN_ADDRESS,
+            count_from=0.01,
             token_to='0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-            from_count=0.01,
-            to_count=0.00190652,
+            count_to=0.00190652,
             percentage=1,
             start_time=today,
             end_time=today + datetime.timedelta(days=1)
