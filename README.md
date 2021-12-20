@@ -1,4 +1,6 @@
-# 1 Docker install
+# 1 Docker install 
+[Руководство по установке docker на windows](https://docs.docker.com/desktop/windows/install/)
+
 # 2 Env configurations
     В дериктории uniswap_backend рядом с файлом manage.py создайте файл .env
 ```bash
@@ -15,11 +17,16 @@ TEST_PROVIDER=https://ropsten.infura.io/v3/$SOME_ID
 ADDRESS=$WALLET_ADDRESS
 PRIVATE_KEY=$WALLET_PRIVATE_KEY
 ```
+
+# 4 HTTP Provider
+[HTTP provider Infura](https://infura.io/)
+
+[Мануал для получения ссылок провайдера Infura ](https://docs.google.com/document/d/1S8iiQL58zHLdebmAbakcnMEitQlEIimCjuXpLJypByA/edit?usp=sharing)
+
 # 3 docker-compose run
 ```bash
 docker-compose -f docker-compose-local.yml up -d --build
 ```
 # 4 Make order
-```bash
 
-```
+[Мануал по созданию нового order](https://docs.google.com/document/d/1c5_-flG4l_5OkGY_-6RA1ddEVeL91IlvDsRBew8ENfI/edit)
