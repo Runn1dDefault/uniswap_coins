@@ -19,7 +19,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.routers import DefaultRouter
 
-from order.views import OrderModelViewSet
+
+from order.views import OrderModelViewSet, TokenModelViewSet
 
 
 schema_view = get_schema_view(
@@ -31,6 +32,7 @@ schema_view = get_schema_view(
 
 router = DefaultRouter()
 router.register('order', OrderModelViewSet)
+router.register('token', TokenModelViewSet)
 
 
 urlpatterns = [

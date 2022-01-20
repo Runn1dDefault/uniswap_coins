@@ -1,59 +1,96 @@
+import time
+
+import requests
+from decimal import Decimal
+from statistics import mean
+
+from order.models import OrderPrice, Order
 from order.services.instances import get_uniswap_instance
-from order.services.convert import token_check_address
 
 
 class UniSwapWrapper:
-    def __init__(self, token_to, token_from, percentage, count_to, count_from, **kwargs):
+    def __init__(self, order, **kwargs):
         self.kwargs = kwargs
-        self.uniswap = get_uniswap_instance(self.is_test_provider)
-        self.token_to = token_to
-        self.token_from = token_from
-        self.percentage = percentage
-        self.price = count_to
-        self.count_from = count_from
-        self.token_from_address, self.from_decimal = token_check_address(token_from, self.is_test_provider)
-        self.token_to_address, self.to_decimal = token_check_address(token_to, self.is_test_provider)
+        self.order = order
+        self.uniswap = get_uniswap_instance()
 
-    @property
-    def is_test_provider(self) -> bool:
-        if self.kwargs.get('is_test'):
-            return True
-        return False
+        self.token_from = self.uniswap.w3.toChecksumAddress(self.order.token_from.address)
+        self.from_decimals = self.order.token_from.decimals
 
-    def change_slippage(self, max_slippage: float):
-        self.uniswap.default_slippage = max_slippage
+        self.token_to = self.uniswap.w3.toChecksumAddress(self.order.token_to.address)
+        self.to_decimals = self.order.token_to.decimals
 
     @property
     def get_token_to_price(self):
         output = self.uniswap.get_price_input(
-            token0=self.token_from_address,
-            token1=self.token_to_address,
+            token0=self.token_from,
+            token1=self.token_to,
             qty=self.get_quantity,
         )
-        return output / 10 ** self.from_decimal
-
-    def make_trade(self):
-        return self.uniswap.make_trade(
-            self.token_from_address, self.token_to_address, qty=self.get_quantity).hex()
+        return output / 10 ** self.from_decimals
 
     @property
     def max_slippage(self):
-        return self.price * self.percentage / 100
+        return (self.order.count_to * self.order.percentage) / 100
 
     @property
     def max_and_min_price(self) -> tuple:
-        max_price = self.price + self.max_slippage
-        min_price = self.price - self.max_slippage
+        max_price = self.order.count_to + self.max_slippage
+        min_price = self.order.count_to - self.max_slippage
         return max_price, min_price
 
-    @property
-    def price_in_range(self) -> bool:
-        price = self.get_token_to_price
-        max_price, min_price = self.max_and_min_price
-        if min_price <= price <= max_price:
-            return True
-        return False
+    def get_min_now_price(self, price: Decimal):
+        if price > 0:
+            return price + (price * self.order.percentage) / 100
+        return 0
+
+    def get_max_now_price(self, price: Decimal):
+        return price - (price * self.order.percentage) / 100
+
+    def trader_checker(self) -> bool:
+        prices = []
+        max_sleep, min_sleep = self.max_and_min_price
+        is_traded = False
+
+        while len(prices) != 3:
+            price = self.get_price()
+            if price:
+                prices.append(price)
+                if not is_traded and min_sleep <= price <= max_sleep:
+                    contract_address = self.make_trade()  # do make trade
+                    self.order.save_contact(contract_address)
+                    is_traded = True
+            time.sleep(10)
+
+        max_price, min_price, mean_price = max(prices), min(prices), mean(prices)
+        prices.remove(max_price)
+        prices.remove(min_price)
+        price = prices[0]
+
+        OrderPrice.objects.create(
+            order=self.order, price=price,
+            mean_price=mean_price,
+            max_price=max_price,
+            min_price=min_price
+        )
+        return is_traded
 
     @property
     def get_quantity(self) -> int:
-        return int(self.count_from * 10 ** self.from_decimal)
+        return int(self.order.count_from * 10 ** self.from_decimals)
+
+    def get_price(self):
+        url = f'https://api.uniswap.org/v1/quote?' \
+              f'protocols=v2,v3&' \
+              f'tokenInAddress={self.token_from}' \
+              f'&tokenInChainId={self.order.token_from.chainId}' \
+              f'&tokenOutAddress={self.token_to}' \
+              f'&tokenOutChainId={self.order.token_to.chainId}' \
+              f'&amount={self.get_quantity}&type=exactIn'
+
+        response = requests.get(url, headers={'origin': 'https://app.uniswap.org'})
+        if response.status_code == 200:
+            return Decimal(response.json()['quoteDecimals'])
+
+    def make_trade(self):
+        return self.uniswap.make_trade(self.token_from, self.token_to, qty=self.get_quantity).hex()

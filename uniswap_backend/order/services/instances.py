@@ -1,7 +1,7 @@
 from uniswap import Uniswap
 from web3.gas_strategies.time_based import fast_gas_price_strategy
 
-from uniswap_backend.settings import (ADDRESS, PRIVATE_KEY, PROVIDER, TEST_PROVIDER)
+from uniswap_backend.settings import (ADDRESS, PRIVATE_KEY, PROVIDER)
 
 from web3 import Web3, middleware
 from web3.middleware import geth_poa_middleware
@@ -18,19 +18,10 @@ def get_web3_instance():
     return w3
 
 
-def get_uniswap_instance(test_provider: bool = False):
-    if test_provider:
-        provider = TEST_PROVIDER
-    else:
-        provider = PROVIDER
-
+def get_uniswap_instance():
     return Uniswap(
         address=ADDRESS,
         private_key=PRIVATE_KEY,
-        provider=provider,
-        version=2,
+        version=3,
         web3=get_web3_instance()
     )
-
-
-
