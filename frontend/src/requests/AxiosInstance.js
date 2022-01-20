@@ -1,7 +1,7 @@
 import axios from "axios";
 
 
-const baseUrl = `${window.location.origin}:8000/api/v1/`;
+const baseUrl = `${window.location.origin}/api/v1/`;
 
 export const axiosInstance = axios.create({
   baseURL: baseUrl,

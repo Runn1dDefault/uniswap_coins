@@ -26,7 +26,6 @@ export default function SwapForm() {
   const [percentage, setPercentage] = useState(1);
   const [success, setSuccess] = useState(false);
 
-
   useEffect(() => {
     setITokens(base_tokens);
     setOTokens(base_tokens);
@@ -85,11 +84,11 @@ export default function SwapForm() {
                 id="token_from"
                 options={options(tokens_in).sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter))}
                 groupBy={(token) => token.firstLetter}
-                getOptionLabel={(token) => token.symbol}
-                sx={{ width: 400 }}
-                isOptionEqualToValue={(option, value) => {
-                  setTokenIn(value.address)
+                getOptionLabel={(token) => {
+                  setTokenIn(token.address)
+                  return token.symbol
                 }}
+                sx={{ width: 400 }}
                 onInputChange={(e) => {
                   setErrors(null);
                   if (e.target.value === ""){
@@ -144,11 +143,11 @@ export default function SwapForm() {
                 id="token_to"
                 options={options(tokens_out).sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter))}
                 groupBy={(token) => token.firstLetter}
-                getOptionLabel={(token) => token.symbol}
-                sx={{ width: 400 }}
-                isOptionEqualToValue={(option, value) => {
-                  setTokenOut(value.address)
+                getOptionLabel={(token) => {
+                  setTokenOut(token.address)
+                  return token.symbol
                 }}
+                sx={{ width: 400 }}
                 onInputChange={(e) => {
                   setErrors(null);
                   if (e.target.value === ""){
