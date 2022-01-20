@@ -1,41 +1,66 @@
+import json
+
 from django.db import models
+from django.utils.timezone import now, localtime
 
-from order.validators import ValidatorMixin
+
+class Token(models.Model):
+    address = models.CharField(max_length=50, primary_key=True)
+    name = models.CharField(max_length=255, verbose_name='Token Name')
+    chainId = models.IntegerField()
+    decimals = models.PositiveIntegerField()
+    symbol = models.CharField(max_length=50)
+    logoURI = models.URLField(blank=True)
+
+    @classmethod
+    def create_from_json_file(cls):
+        with open('tokens.json') as file:
+            json_data = json.load(file)
+
+        if json_data:
+            new_objs = list(cls(**i) for i in json_data['tokens'] or []
+                            if not cls.objects.filter(address=i['address']).exists()
+                            )
+            if new_objs:
+                cls.objects.bulk_create(new_objs)
 
 
-class Order(models.Model, ValidatorMixin):
-    # token from
-    token_from = models.CharField(max_length=255)
-    count_from = models.DecimalField(max_digits=19, decimal_places=10)
-    # token to
-    token_to = models.CharField(max_length=255)
-    count_to = models.DecimalField(max_digits=19, decimal_places=10)
-    # admissible error
+class Order(models.Model):
+    class StatusChoices(models.TextChoices):
+        PROCESS = 'In Process'
+        WAIT = 'Waiting'
+        SUCCESS = 'Success'
+        FAILED = 'Failed'
+        OVERWTRADE = 'Over without trade'
+
+    token_from = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokens_from')
+    count_from = models.DecimalField(max_digits=19, decimal_places=15)
+    token_to = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokens_to')
+    count_to = models.DecimalField(max_digits=19, decimal_places=15)
     percentage = models.DecimalField(default=1, max_digits=19, decimal_places=10)
-    # work timerange
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     # for after successful completion of the transaction
     contract_address = models.TextField(blank=True)
     # to define the task
     task_id = models.CharField(max_length=255, blank=True)
+    
+    status = models.CharField(
+        max_length=18,
+        choices=StatusChoices.choices,
+        default=StatusChoices.WAIT,
+    )
 
-    def save(self, **kwargs):
-        self.clean()
-        return super().save(**kwargs)
+    def save_contact(self, contract_address):
+        self.contract_address = contract_address
+        self.status = Order.StatusChoices.SUCCESS
+        self.save()
 
-    def clean(self):
-        self.validate_percentage(float(self.percentage))
-        self.validate_token_address(self.token_to, 'token_to')
-        self.validate_token_address(self.token_from, 'token_from')
-        self.validate_time_range(self.start_time, self.end_time)
-        self.validate_token_count(float(self.count_to), float(self.count_from))
-        self.check_token_group_balance(self.token_from, float(self.count_from))
 
-    @classmethod
-    def find_and_status_update(cls, contract_address: str, **kwargs):
-        objs_filter = cls.objects.filter(**kwargs)
-        if objs_filter.exists():
-            order = objs_filter.first()
-            order.contract_address = contract_address
-            order.save()
+class OrderPrice(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='prices')
+    price = models.DecimalField(max_digits=19, decimal_places=15)
+    mean_price = models.DecimalField(max_digits=19, decimal_places=15)
+    max_price = models.DecimalField(max_digits=19, decimal_places=15)
+    min_price = models.DecimalField(max_digits=19, decimal_places=15)
+    date = models.DateTimeField(default=localtime(now()))

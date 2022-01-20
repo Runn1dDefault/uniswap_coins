@@ -1,6 +1,4 @@
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
-
 from uniswap_backend.celery import app
 
 from order.models import Order
@@ -10,14 +8,27 @@ import time
 
 
 @app.task
-def swap_task(content):
-    swap_wrapper = UniSwapWrapper(**content)
-    while timezone.now() <= parse_datetime(content.get('end_time')):
-        time.sleep(5)
-        if swap_wrapper.price_in_range:
-            # do make trade
-            contract_address = swap_wrapper.make_trade()
-            Order.find_and_status_update(contract_address, id=content.get('id'))
-            break
-        else:
-            print('-------------------------')
+def swap_task(order_id):
+    order = Order.objects.get(id=order_id)
+    order.status = Order.StatusChoices.PROCESS
+    order.save()
+
+    swap_wrapper = UniSwapWrapper(order)
+    try:
+        # loop for check price
+        while timezone.now() <= order.end_time:
+            if swap_wrapper.trader_checker():
+                break
+            else:
+                print('-------------------------')
+            # rate limit of request to avoid connection errors
+            time.sleep(10)
+
+        if order.contract_address == '' and timezone.now() >= order.end_time:
+            order.status = Order.StatusChoices.OVERWTRADE
+            order.save()
+
+    except Exception as e:
+        print(e)
+        order.status = Order.StatusChoices.FAILED
+        order.save()
