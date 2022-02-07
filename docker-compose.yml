@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  web:
+    restart: unless-stopped
+    build:
+      context: ./uniswap_backend
+      dockerfile: ./Dockerfile
+    entrypoint: /app/uniswap_backend/maker-entrypoint.sh
+    volumes:
+      - ./uniswap_backend:/app/uniswap_backend
+      - static_volume:/app/uniswap_backend/django_static
+    expose:
+      - 8000
+    env_file:
+      - ./uniswap_backend/.env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:10.4-alpine
+    hostname: postgres
+    restart: always
+    env_file:
+      - ./uniswap_backend/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  celery:
+    restart: always
+    build:
+      context: ./uniswap_backend
+    command: /bin/bash -c "cd uniswap_backend && celery -A  uniswap_backend worker"
+    volumes:
+      - ./uniswap_backend:/app/uniswap_backend
+    env_file:
+      - ./uniswap_backend/.env
+    depends_on:
+      - redis
+      - web
+
+  nginx:
+    image: library/nginx:alpine
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    volumes:
+      - static_volume:/app/uniswap_backend/django_static
+      - ./uniswap_backend/nginx/dev:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+
+  redis:
+    image: 'redis:alpine'
+    command: redis-server --requirepass jjsja7123jdasdkk21238882jjejq
+    restart: always
+    expose:
+      - 6379
+    ports:
+      - "6377:6379"
+    hostname: redis
+    volumes:
+      - redis_data:/bitnami/redis/data
+
+volumes:
+  static_volume: {}
+  redis_data:
+  postgres:

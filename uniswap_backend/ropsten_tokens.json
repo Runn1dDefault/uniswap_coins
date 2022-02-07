@@ -1,0 +1,42 @@
+[
+  {
+    "address": "0x6ee856ae55b6e1a249f04cd3b947141bc146273c",
+    "name": "Tether",
+    "symbol": "USDT",
+    "chainId": 3,
+    "decimals": 6,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
+  },
+  {
+    "address": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+    "name": "ETH",
+    "symbol": "WETH",
+    "chainId": 3,
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/2396.png"
+  },
+  {
+    "address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+    "name": "UNISWAP Token",
+    "symbol": "UNI",
+    "chainId": 3,
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/7083.png"
+  },
+  {
+    "address": "0xaD6D458402F60fD3Bd25163575031ACDce07538D",
+    "name": "DAI",
+    "symbol": "DAI",
+    "chainId": 3,
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/7417.png"
+  },
+  {
+    "address": "0x588a4fAf0B068446caA3F54AbcC19F41426b1d1F",
+    "name": "Testking",
+    "symbol": "TKING",
+    "chainId": 3,
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/9854.png"
+  }
+]
